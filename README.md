@@ -67,7 +67,6 @@ Canlı Demo: [deprem-takip.vercel.app](https://deprem-bilgii.vercel.app/)
 1. Sağ taraftaki "Deprem İstatistikleri" kartında bulunan sekmeleri kullanarak farklı zaman dilimlerindeki istatistikleri görüntüleyin
 2. Grafikte deprem büyüklüğü dağılımını inceleyebilirsiniz
 
-
 ## 🛡️ Güvenilirlik ve Veri Kaynakları
 
 DepremTakip, verileri güvenilir kaynaklardan almaktadır:
@@ -83,7 +82,7 @@ Bu uygulama yalnızca bilgilendirme amaçlıdır. Acil durumlarda lütfen resmi 
 DepremTakip hakkında geri bildirimleriniz, önerileriniz veya katkılarınız için lütfen iletişime geçin:
 
 - Discord: [ragnarshu](https://discord.com/users/1090629202845372477)
-- GitHub: [Sorunlar ve İstekler](https://github.com/akiracik/deprem-bilgi/issues)
+- GitHub: [Sorunlar ve İstekler](https://github.com/ThePasha2015/deprem-takip/)
 
 Bu projeyi beğendiyseniz, yıldız ⭐ vermeyi unutmayın!
 
@@ -94,3 +93,5 @@ DepremTakip açık kaynaklı bir projedir ve MIT lisansı altında dağıtılmak
 ---
 
 Depremler hakkında bilgi sahibi olmak, afetlere karşı hazırlıklı olmak için önemli bir adımdır. Güvende kalın! 🌍🏠
+
+[![Discord Banner](https://api.weblutions.com/discord/invite/5da2f8WTVV/)](https://discord.gg/5da2f8WTVV)
