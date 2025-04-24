@@ -1,0 +1,281 @@
+body {
+    background-color: #f8f9fa;
+}
+
+.navbar-brand {
+    font-weight: 700;
+}
+
+.earthquake-card {
+    transition: transform 0.2s;
+    border-left: 5px solid #dc3545;
+}
+
+.earthquake-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.magnitude-badge {
+    font-size: 1.2rem;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+#mapContainer {
+    height: 500px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.stats-card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    transition: transform 0.2s;
+}
+
+.stats-card:hover {
+    transform: translateY(-5px);
+}
+
+.card-header {
+    border-top-left-radius: 12px !important;
+    border-top-right-radius: 12px !important;
+}
+
+.api-status {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    z-index: 1000;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    opacity: 0.9;
+}
+
+.api-status:hover {
+    opacity: 1;
+}
+
+.info-box {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    z-index: 999;
+    max-width: 300px;
+    background-color: white;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.pulse {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #ff4136;
+    box-shadow: 0 0 0 rgba(255, 65, 54, 0.4);
+    animation: pulse 2s infinite;
+    margin-right: 8px;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 65, 54, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(255, 65, 54, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 65, 54, 0);
+    }
+}
+
+.badge-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.filter-panel {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+}
+
+.notification-toggle {
+    cursor: pointer;
+}
+
+#loadingSpinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: rgba(255,255,255,0.7);
+    z-index: 1000;
+    border-radius: 8px;
+}
+
+.footer {
+    background-color: #343a40;
+    color: white;
+    padding: 30px 0;
+    margin-top: 40px;
+}
+
+.footer a {
+    color: #adb5bd;
+    text-decoration: none;
+}
+
+.footer a:hover {
+    color: white;
+    text-decoration: underline;
+}
+
+#chartContainer {
+    height: 300px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.nav-tabs .nav-link {
+    border: none;
+    color: #495057;
+    font-weight: 500;
+}
+
+.nav-tabs .nav-link.active {
+    border-bottom: 3px solid #dc3545;
+    background-color: transparent;
+    color: #dc3545;
+}
+
+.location-marker {
+    cursor: pointer;
+}
+
+/* Fay hatları için stil */
+.fault-line {
+    stroke: #ff0000;
+    stroke-width: 2;
+    stroke-dasharray: 5, 5;
+    stroke-opacity: 0.7;
+}
+
+/* Deprem risk bölgeleri için stil */
+.risk-zone {
+    fill-opacity: 0.2;
+}
+
+.risk-high {
+    fill: #dc3545;
+    stroke: #dc3545;
+}
+
+.risk-medium {
+    fill: #ffc107;
+    stroke: #ffc107;
+}
+
+.risk-low {
+    fill: #28a745;
+    stroke: #28a745;
+}
+
+/* Gerçek zamanlı gösterge için stil */
+.live-indicator {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #28a745;
+    margin-left: 15px;
+}
+
+.live-indicator .pulse {
+    background-color: #28a745;
+    margin-right: 5px;
+}
+
+/* Gerçek zamanlı banner için stiller */
+.realtime-banner {
+    transition: all 0.3s ease;
+}
+
+.bg-success-pulse {
+    animation: pulse-green 1s;
+}
+
+@keyframes pulse-green {
+    0% {
+        background-color: #198754;
+    }
+    50% {
+        background-color: #25c274;
+    }
+    100% {
+        background-color: #198754;
+    }
+}
+
+/* Deprem rehberi için stiller */
+.accordion-button:not(.collapsed) {
+    background-color: rgba(255, 193, 7, 0.1);
+    color: #212529;
+}
+
+.accordion-button:focus {
+    box-shadow: 0 0 0 0.25rem rgba(255, 193, 7, 0.25);
+}
+
+#regionalAdvice .alert {
+    margin-bottom: 0;
+}
+
+#regionalAdvice ul {
+    padding-left: 1.2rem;
+}
+
+#regionalAdvice ul li {
+    margin-bottom: 0.25rem;
+}
+
+#regionalAdvice ul li:last-child {
+    margin-bottom: 0;
+}
+
+/* Mobil için duyarlı stillemeler */
+@media (max-width: 768px) {
+    #mapContainer {
+        height: 400px;
+    }
+    
+    .magnitude-badge {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+    
+    .api-status {
+        font-size: 0.8rem;
+        padding: 6px 12px;
+    }
+}

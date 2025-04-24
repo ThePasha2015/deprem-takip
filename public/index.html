@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DepremTakip - Canlı Deprem Bilgi Sistemi</title>
+    <link rel="icon" href="icon.png" type="image/x-icon">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-danger">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-broadcast-tower me-2"></i>DepremTakip
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#">
+                            <i class="fas fa-home me-1"></i> Ana Sayfa
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#stats">
+                            <i class="fas fa-chart-bar me-1"></i> İstatistikler
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#about">
+                            <i class="fas fa-info-circle me-1"></i> Hakkında
+                        </a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center notification-toggle" id="notificationToggle">
+                    <i class="fas fa-bell me-2 text-white"></i>
+                    <span class="text-white d-none d-md-inline">Bildirimler</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Canlı Güncelleme Banner'ı -->
+    <div class="realtime-banner bg-success text-white py-2 d-none" id="realtimeBanner">
+        <div class="container d-flex justify-content-between align-items-center">
+            <div>
+                <i class="fas fa-broadcast-tower me-2"></i>
+                <span id="realtimeMessage">Gerçek zamanlı güncellemeler aktif</span>
+            </div>
+            <div>
+                <span class="badge bg-light text-success me-2"><span id="activeUsers">0</span> aktif kullanıcı</span>
+                <span class="badge bg-light text-success" id="lastUpdateTime"></span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container mt-4">
+        <div class="alert alert-warning alert-dismissible fade show mb-4" role="alert">
+            <strong><i class="fas fa-exclamation-triangle me-2"></i>Önemli Bilgi:</strong> 
+            Bu site, sadece bilgilendirme amaçlıdır. Deprem verileri Kandilli Rasathanesi'nden alınmaktadır.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Kapat"></button>
+        </div>
+        
+        <div class="row">
+            <div class="col-lg-12 mb-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-map-marked-alt me-2"></i>Deprem Haritası
+                        </h5>
+                        <button class="btn btn-sm btn-outline-light" id="refreshMapBtn">
+                            <i class="fas fa-sync-alt me-1"></i>Yenile
+                        </button>
+                    </div>
+                    <div class="card-body p-0 position-relative">
+                        <div id="loadingSpinner">
+                            <div class="spinner-border text-danger" role="status">
+                                <span class="visually-hidden">Yükleniyor...</span>
+                            </div>
+                        </div>
+                        <div id="mapContainer"></div>
+                        <div class="info-box d-none" id="mapInfo">
+                            <h6 class="mb-2">Harita Gösterimi</h6>
+                            <div class="d-flex align-items-center mb-2">
+                                <span class="badge bg-danger me-2" style="width:20px; height:20px; border-radius:50%"></span>
+                                <small>5.0+ Büyüklük</small>
+                            </div>
+                            <div class="d-flex align-items-center mb-2">
+                                <span class="badge bg-warning me-2" style="width:20px; height:20px; border-radius:50%"></span>
+                                <small>4.0 - 4.9 Büyüklük</small>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-info me-2" style="width:20px; height:20px; border-radius:50%"></span>
+                                <small>3.0 - 3.9 Büyüklük</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="filter-panel mb-4">
+                    <div class="row">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <label for="magnitudeFilter" class="form-label">Büyüklük Filtresi</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="magnitudeFilter" placeholder="Minimum büyüklük" value="3.0" min="0" step="0.1">
+                                <button class="btn btn-danger" type="button" id="applyFilterBtn">
+                                    <i class="fas fa-filter me-1"></i>Uygula
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="locationFilter" class="form-label">Konum Filtresi</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="locationFilter" placeholder="Konum ara (ör: Marmara)">
+                                <button class="btn btn-danger" type="button" id="clearFilterBtn">
+                                    <i class="fas fa-times me-1"></i>Temizle
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list-alt me-2"></i>Son Depremler
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <ul class="nav nav-tabs" id="earthquakeTabs">
+                            <li class="nav-item">
+                                <a class="nav-link active" data-bs-toggle="tab" href="#allEarthquakes">
+                                    <i class="fas fa-globe me-1"></i>Tüm Depremler
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-bs-toggle="tab" href="#significantEarthquakes">
+                                    <i class="fas fa-exclamation-circle me-1"></i>Önemli Depremler (4.0+)
+                                </a>
+                            </li>
+                        </ul>
+                        <div class="tab-content p-3">
+                            <div class="tab-pane fade show active" id="allEarthquakes">
+                                <div id="earthquakeList" class="list-group list-group-flush">
+                                    <!-- Deprem listesi buraya JavaScript ile yüklenecek -->
+                                    <div class="text-center py-5">
+                                        <div class="spinner-border text-danger" role="status">
+                                            <span class="visually-hidden">Yükleniyor...</span>
+                                        </div>
+                                        <p class="mt-2">Deprem verileri yükleniyor...</p>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-center mt-3">
+                                    <button class="btn btn-outline-danger" id="loadMoreBtn">
+                                        <i class="fas fa-sync-alt me-1"></i>Daha Fazla Göster
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="significantEarthquakes">
+                                <div id="significantEarthquakeList" class="list-group list-group-flush">
+                                    <!-- Önemli depremler buraya JavaScript ile yüklenecek -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <!-- Deprem Anında Yapılacaklar Rehberi -->
+                <div class="card stats-card mb-4" id="earthquakeGuide">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">
+                            <i class="fas fa-hard-hat me-2"></i>Deprem Anında Yapılacaklar
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="accordion" id="accordionGuide">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="headingOne">
+                                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                        <i class="fas fa-clock me-2"></i>Deprem Öncesi
+                                    </button>
+                                </h2>
+                                <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionGuide">
+                                    <div class="accordion-body">
+                                        <ul class="list-unstyled mb-0">
+                                            <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Güvenli yerler belirleyin (sağlam masa altı, duvarların iç köşeleri)</li>
+                                            <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Acil durum çantası hazırlayın (su, yiyecek, ilaç, el feneri, düdük)</li>
+                                            <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Aile toplanma noktası belirleyin</li>
+                                            <li><i class="fas fa-check-circle text-success me-2"></i>Dolapları, kitaplıkları duvara sabitleyin</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="headingTwo">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>Deprem Sırasında
+                                    </button>
+                                </h2>
+                                <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionGuide">
+                                    <div class="accordion-body">
+                                        <ul class="list-unstyled mb-0">
+                                            <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i><strong>Çök-Kapan-Tutun:</strong> Sağlam masa altında cenin pozisyonu alın</li>
+                                            <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Asansör ve merdivenleri kullanmayın</li>
+                                            <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Pencere ve dış duvarlardan uzak durun</li>
+                                            <li><i class="fas fa-check-circle text-success me-2"></i>Dışarıdaysanız açık alana çıkın, bina/ağaçlardan uzaklaşın</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="headingThree">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                                        <i class="fas fa-first-aid me-2"></i>Deprem Sonrası
+                                    </button>
+                                </h2>
+                                <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#accordionGuide">
+                                    <div class="accordion-body">
+                                        <ul class="list-unstyled mb-0">
+                                            <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Gaz, su ve elektriği kapatın</li>
+                                            <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Hasarlı binalardan uzak durun</li>
+                                            <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Resmi bilgileri takip edin, söylentilere inanmayın</li>
+                                            <li><i class="fas fa-check-circle text-success me-2"></i>Acil durum çantanızı yanınıza alın</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="headingFour">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                                        <i class="fas fa-map-marker-alt me-2"></i>Bölgesel Tavsiyeler
+                                    </button>
+                                </h2>
+                                <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#accordionGuide">
+                                    <div class="accordion-body">
+                                        <div class="mb-3">
+                                            <label for="regionSelect" class="form-label">Bölge Seçin:</label>
+                                            <select class="form-select" id="regionSelect">
+                                                <option value="marmara">Marmara Bölgesi</option>
+                                                <option value="ege">Ege Bölgesi</option>
+                                                <option value="akdeniz">Akdeniz Bölgesi</option>
+                                                <option value="karadeniz">Karadeniz Bölgesi</option>
+                                                <option value="ic_anadolu">İç Anadolu Bölgesi</option>
+                                                <option value="dogu_anadolu">Doğu Anadolu Bölgesi</option>
+                                                <option value="guneydogu_anadolu">Güneydoğu Anadolu Bölgesi</option>
+                                            </select>
+                                        </div>
+                                        <div id="regionalAdvice">
+                                            <div class="alert alert-info">
+                                                <p><strong>Marmara Bölgesi İçin Özel Tavsiyeler:</strong></p>
+                                                <ul class="mb-0">
+                                                    <li>Kuzey Anadolu Fay Hattının aktif olduğu bölgede bulunuyorsunuz</li>
+                                                    <li>Deprem çantanızı hazır bulundurun</li>
+                                                    <li>Aile toplanma planı oluşturun</li>
+                                                    <li>AFAD'ın toplanma alanlarını öğrenin</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-light">
+                            <a href="https://www.afad.gov.tr/deprem-aninda-neler-yapmalisiniz" target="_blank" class="btn btn-sm btn-warning w-100">
+                                <i class="fas fa-external-link-alt me-1"></i>Detaylı Bilgi - AFAD
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card stats-card mb-4" id="stats">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-pie me-2"></i>Deprem İstatistikleri
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="nav nav-tabs mb-3" id="statsTabs">
+                            <li class="nav-item">
+                                <a class="nav-link active" data-bs-toggle="tab" href="#last24Hours">Son 24 Saat</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-bs-toggle="tab" href="#last7Days">Son 7 Gün</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-bs-toggle="tab" href="#last30Days">Son 30 Gün</a>
+                            </li>
+                        </ul>
+                        <div class="tab-content">
+                            <div class="tab-pane fade show active" id="last24Hours">
+                                <div id="stats24Hours">
+                                    <div class="d-flex justify-content-between mb-3">
+                                        <div class="text-center">
+                                            <h2 class="mb-0 text-primary" id="total24h">-</h2>
+                                            <small class="text-muted">Toplam</small>
+                                        </div>
+                                        <div class="text-center">
+                                            <h2 class="mb-0 text-info" id="total3plus24h">-</h2>
+                                            <small class="text-muted">3.0+</small>
+                                        </div>
+                                        <div class="text-center">
+                                            <h2 class="mb-0 text-warning" id="total4plus24h">-</h2>
+                                            <small class="text-muted">4.0+</small>
+                                        </div>
+                                        <div class="text-center">
+                                            <h2 class="mb-0 text-danger" id="total5plus24h">-</h2>
+                                            <small class="text-muted">5.0+</small>
+                                        </div>
+                                    </div>
+                                    <div class="alert alert-light">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span>En Büyük Deprem:</span>
+                                            <span class="badge bg-danger" id="max24h">-</span>
+                                        </div>
+                                        <small id="maxLocation24h" class="text-muted d-block mt-1">-</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="last7Days">
+                                <div id="stats7Days">
+                                    <div class="d-flex justify-content-between mb-3">
+                                        <div class="text-center">
+                                            <h2 class="mb-0 text-primary" id="total7d">-</h2>
+                                            <small class="text-muted">Toplam</small>
+                                        </div>
+                                        <div class="text-center">
+                                            <h2 class="mb-0 text-info" id="total3plus7d">-</h2>
+                                            <small class="text-muted">3.0+</small>
+                                        </div>
+                                        <div class="text-center">
+                                            <h2 class="mb-0 text-warning" id="total4plus7d">-</h2>
+                                            <small class="text-muted">4.0+</small>
+                                        </div>
+                                        <div class="text-center">
+                                            <h2 class="mb-0 text-danger" id="total5plus7d">-</h2>
+                                            <small class="text-muted">5.0+</small>
+                                        </div>
+                                    </div>
+                                    <div class="alert alert-light">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span>En Büyük Deprem:</span>
+                                            <span class="badge bg-danger" id="max7d">-</span>
+                                        </div>
+                                        <small id="maxLocation7d" class="text-muted d-block mt-1">-</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="last30Days">
+                                <div id="stats30Days">
+                                    <div class="d-flex justify-content-between mb-3">
+                                        <div class="text-center">
+                                            <h2 class="mb-0 text-primary" id="total30d">-</h2>
+                                            <small class="text-muted">Toplam</small>
+                                        </div>
+                                        <div class="text-center">
+                                            <h2 class="mb-0 text-info" id="total3plus30d">-</h2>
+                                            <small class="text-muted">3.0+</small>
+                                        </div>
+                                        <div class="text-center">
+                                            <h2 class="mb-0 text-warning" id="total4plus30d">-</h2>
+                                            <small class="text-muted">4.0+</small>
+                                        </div>
+                                        <div class="text-center">
+                                            <h2 class="mb-0 text-danger" id="total5plus30d">-</h2>
+                                            <small class="text-muted">5.0+</small>
+                                        </div>
+                                    </div>
+                                    <div class="alert alert-light">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span>En Büyük Deprem:</span>
+                                            <span class="badge bg-danger" id="max30d">-</span>
+                                        </div>
+                                        <small id="maxLocation30d" class="text-muted d-block mt-1">-</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="chartContainer"></div>
+                    </div>
+                </div>
+                
+                <div class="card stats-card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-bell me-2"></i>Son Bildirimler
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="notificationList">
+                            <div class="alert alert-info mb-0">
+                                Bildirim almak için sayfanın üst kısmındaki bildirim butonunu kullanın.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card stats-card mb-4" id="about">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>Hakkında
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p>Bu deprem bilgi sitesi, Kandilli Rasathanesi verilerine dayanarak Türkiye ve çevresindeki depremleri gerçek zamanlı olarak takip etmenizi sağlar.</p>
+                        <p>Veriler <a href="http://www.koeri.boun.edu.tr/scripts/lst0.asp" target="_blank">Kandilli Rasathanesi</a> web sitesinden alınmaktadır.</p>
+                        
+                        <div class="badge-group mt-3">
+                            <span class="badge bg-primary">Gerçek Zamanlı</span>
+                            <span class="badge bg-secondary">Kandilli</span>
+                            <span class="badge bg-success">Harita</span>
+                            <span class="badge bg-info">Türkiye</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer class="footer" id="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-4 mb-md-0">
+                    <h5>DepremTakip</h5>
+                    <p>Türkiye'deki depremleri gerçek zamanlı olarak takip etmek için geliştirilmiş bir web uygulaması.</p>
+                </div>
+                <div class="col-md-4 mb-4 mb-md-0">
+                    <h5>Hızlı Erişim</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#"><i class="fas fa-home me-1"></i>Ana Sayfa</a></li>
+                        <li><a href="#stats"><i class="fas fa-chart-bar me-1"></i>İstatistikler</a></li>
+                        <li><a href="#about"><i class="fas fa-info-circle me-1"></i>Hakkında</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5>Faydalı Bağlantılar</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="https://www.afad.gov.tr/" target="_blank"><i class="fas fa-external-link-alt me-1"></i>AFAD</a></li>
+                        <li><a href="http://www.koeri.boun.edu.tr/scripts/lst0.asp" target="_blank"><i class="fas fa-external-link-alt me-1"></i>Kandilli Rasathanesi</a></li>
+                        <li><a href="https://deprem.afad.gov.tr/depremzedeleredestek" target="_blank"><i class="fas fa-hand-holding-heart me-1"></i>Depremzedelere Destek</a></li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="mt-4 mb-3" style="border-color: #6c757d;">
+            <div class="text-center">
+                <p class="mb-0">© 2025 DepremTakip. Tüm hakları saklıdır.</p>
+            </div>
+        </div>
+    </footer>
+    
+    <div class="api-status bg-secondary text-white" id="apiStatus">
+        <i class="fas fa-sync fa-spin me-2"></i>API Kontrolü...
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/js/app.js"></script>
+</body>
+</html>
